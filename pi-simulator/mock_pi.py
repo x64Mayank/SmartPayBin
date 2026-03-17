@@ -3,7 +3,7 @@ import random
 import time
 from datetime import datetime
 
-BACKEND_URL = "http://localhost:5000/api/deposits"
+BACKEND_URL = "http://localhost:8000/api/deposits"
 
 bin_id = "BIN001"
 capacity_cm = 50
