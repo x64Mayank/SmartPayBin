@@ -1,4 +1,4 @@
-import { asyncHandler } from "../utils/asyncHandler.js";
+import { asyncHandler } from "../utils/AsyncHandler.js";
 import { ApiError } from "../utils/ApiError.js";
 import { User } from "../models/user.model.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
@@ -24,7 +24,7 @@ const generateAccessAndRefereshTokens = async (userId) => {
 };
 
 const registerUser = asyncHandler(async (req, res) => {
-  const { fullName, email, username, password } = req.body;
+  const { fullName,email, username, password } = req.body;
 
   if (
     [fullName, email, username, password].some((field) => field?.trim() === "")
@@ -41,7 +41,7 @@ const registerUser = asyncHandler(async (req, res) => {
   }
 
   const user = await User.create({
-    name,
+    fullName,
     email,
     password,
     username: username.toLowerCase(),
@@ -204,9 +204,9 @@ const changeCurrentPassword = asyncHandler(async (req, res) => {
 });
 
 const updateAccountDetails = asyncHandler(async (req, res) => {
-  const { name, email } = req.body;
+  const { fullName, email } = req.body;
 
-  if (!name || !email) {
+  if (!fullName || !email) {
     throw new ApiError(400, "All fields are required");
   }
 
@@ -214,7 +214,7 @@ const updateAccountDetails = asyncHandler(async (req, res) => {
     req.user?._id,
     {
       $set: {
-        name,
+        fullName,
         email: email,
       },
     },

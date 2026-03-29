@@ -1,11 +1,11 @@
-import { asyncHandler } from "../utils/asyncHandler.js";
+import { asyncHandler } from "../utils/AsyncHandler.js";
 import jwt from "jsonwebtoken";
 import { User } from "../models/user.model.js";
 import { ApiError } from "../utils/ApiError.js";
 
 // we are trying to verify if user is logged in or not
 //
-export const jwtVerify = asyncHandler(async (req, res, next) => {
+export const verifyJWT = asyncHandler(async (req, res, next) => {
   try {
     // we are checking both cookies and header in case token is not present in cookies
     const token =

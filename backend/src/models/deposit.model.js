@@ -27,4 +27,4 @@ const depositSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
-export default mongoose.model("Deposit", depositSchema);
+export const Deposit = mongoose.model("Deposit", depositSchema);

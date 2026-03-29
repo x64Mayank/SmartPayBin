@@ -1,5 +1,5 @@
 import express from "express";
-import Deposit from "../models/Deposit.model.js";
+import { Deposit } from "../models/deposit.model.js";
 import { generateRewardPointsAndUpdateFillPercentage } from "../controllers/deposit.controller.js";
 
 const router = express.Router();

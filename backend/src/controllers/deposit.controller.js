@@ -1,9 +1,7 @@
-import Deposit from "../models/Deposit.js";
-import User from "../models/User.js";
 import { ApiError } from "../utils/ApiError.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
-import asyncHandler from "express-async-handler";
-
+import { asyncHandler } from "../utils/AsyncHandler.js";
+import {Deposit} from "../models/deposit.model.js";
 const generateRewardPointsAndUpdateFillPercentage = asyncHandler(
   async (req, res) => {
     // we need an api requet to get the waste type, weight, fill level and capacity
