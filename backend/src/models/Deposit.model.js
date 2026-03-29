@@ -4,7 +4,7 @@ const depositSchema = new mongoose.Schema(
   {
     wasteType: {
       type: String,
-      enum: ["plastic", "paper", "glass", "metal"],
+      enum: ["plastic", "recyclable", "biodegradable", "mixed"],
       required: true,
     },
     userId: {
@@ -24,7 +24,7 @@ const depositSchema = new mongoose.Schema(
       required: true,
     },
   },
-  { timestamps: true },
+  { timestamps: true }
 );
 
 export default mongoose.model("Deposit", depositSchema);
