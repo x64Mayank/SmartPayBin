@@ -50,3 +50,25 @@ coverage/
 # Misc
 *.bak
 *.tmp
+
+# Caches
+.eslintcache
+.stylelintcache
+.prettiercache
+.vite/
+.turbo/
+
+# Credentials
+*.pem
+*.key
+*.cert
+
+# System Files
+.AppleDouble
+.LSOverride
+Icon
+._*
+
+# Testing
+/.nyc_output
+/coverage
