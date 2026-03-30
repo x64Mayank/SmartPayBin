@@ -2,29 +2,45 @@ import { ApiError } from "../utils/ApiError.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
 import { asyncHandler } from "../utils/AsyncHandler.js";
 import {Deposit} from "../models/deposit.model.js";
-const generateRewardPointsAndUpdateFillPercentage = asyncHandler(
+import { User } from "../models/user.model.js";
+import { Bin } from "../models/bin.model.js";
+const generateAndUpdateRewardPoints = asyncHandler(
   async (req, res) => {
     // we need an api requet to get the waste type, weight, fill level and capacity
-    const { wasteType, weightKg, fillLevelCm, capacityCm } = req.body;
+    const { binId, wasteType, weightKg } = req.body;
+    const userId = req.user._id;
 
-    if (!wasteType || !weightKg || !fillLevelCm || !capacityCm) {
-      return new ApiError(
-        400,
-        "Missing required fields: wasteType, weightKg, fillLevelCm, capacityCm"
-      );
+    if (!binId || !wasteType || !weightKg) {
+      throw new ApiError(400, "Missing required fields");
     }
 
-    if (fillLevelCm >= capacityCm) {
-      return new ApiError(
+    if (weightKg <= 0) {
+      throw new ApiError(400, "Weight must be greater than 0");
+    }
+
+  // Get real-time bin data
+  const bin = await Bin.findById(binId);
+  if (!bin){
+    throw new ApiError(404, "Bin not found");
+  } 
+
+    if (bin.fillLevel >= bin.capacity) {
+      throw new ApiError(
         400,
         "Bin is full can not take more waste until it is emptied "
       );
     }
 
-    const fillPercentage = (
-      ((capacityCm - fillLevelCm) / capacityCm) *
+    const newFillLevel = bin.fillLevel + weightKg;
+    if (newFillLevel > bin.capacity) {
+      throw new ApiError(400, "Exceeds bin capacity");
+    }
+
+    const fillPercentage = Number(
+      ((newFillLevel / bin.capacity) *
       100
-    ).toFixed(2);
+      ).toFixed(2)
+    );
 
     const rewardRates = {
       recyclable: 10,
@@ -33,11 +49,22 @@ const generateRewardPointsAndUpdateFillPercentage = asyncHandler(
       mixed: 0,
     };
     const rewardPoints = weightKg * (rewardRates[wasteType] || 0);
-
-    const newDeposit = Deposit.create({
+    
+    const newDeposit = await Deposit.create({
       wasteType,
       weightKg,
-      fillLevelCm,
+      fillPercentage,
+      userId,
+      binId,
+      rewardPoints,
+    });
+
+    // Update bin (after deposit)
+    bin.fillLevel = newFillLevel;
+    await bin.save();
+
+    await User.findByIdAndUpdate(userId, {
+      $inc: { rewardPoints: rewardPoints },
     });
 
     res
@@ -45,11 +72,11 @@ const generateRewardPointsAndUpdateFillPercentage = asyncHandler(
       .json(
         new ApiResponse(
           201,
-          { rewardPoints, fillPercentage },
-          "Reward points calculated successfully"
+          { rewardPoints, fillPercentage, deposit: newDeposit, },
+          "Reward points calculated successfully and user updated successfully"
         )
       );
   }
 );
 
-export { generateRewardPointsAndUpdateFillPercentage };
+export { generateAndUpdateRewardPoints };

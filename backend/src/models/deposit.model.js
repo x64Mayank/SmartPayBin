@@ -11,6 +11,11 @@ const depositSchema = new mongoose.Schema(
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",
     },
+    binId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Bin",
+      required: true,
+    },
     weightKg: {
       type: Number,
       required: true,
