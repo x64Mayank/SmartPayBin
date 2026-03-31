@@ -2,6 +2,11 @@ import mongoose from "mongoose";
 
 const depositSchema = new mongoose.Schema(
   {
+    sessionId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "DepositSession",
+      required: true,
+    },
     wasteType: {
       type: String,
       enum: ["plastic", "recyclable", "biodegradable", "mixed"],
@@ -10,6 +15,11 @@ const depositSchema = new mongoose.Schema(
     userId: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",
+    },
+    binId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Bin",
+      required: true,
     },
     weightKg: {
       type: Number,

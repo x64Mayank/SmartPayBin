@@ -166,7 +166,7 @@ const refreshAccessToken = asyncHandler(async (req, res) => {
       secure: true,
     };
 
-    const { accessToken, newRefreshToken } =
+    const { accessToken, refreshToken: newRefreshToken } =
       await generateAccessAndRefereshTokens(user._id);
 
     return res
@@ -226,6 +226,21 @@ const updateAccountDetails = asyncHandler(async (req, res) => {
     .json(new ApiResponse(200, user, "Account details updated successfully"));
 });
 
+const getCurrentUser = asyncHandler(async (req, res) => {
+  // req.user comes from verifyJWT middleware
+  const user = await User.findById(req.user._id).select(
+    "-password -refreshToken"
+  );
+
+  if (!user) {
+    throw new ApiError(404, "User not found");
+  }
+
+  return res.status(200).json(
+    new ApiResponse(200, user, "User fetched successfully")
+  );
+});
+
 export {
   registerUser,
   loginUser,
@@ -233,4 +248,5 @@ export {
   refreshAccessToken,
   changeCurrentPassword,
   updateAccountDetails,
+  getCurrentUser,
 };
