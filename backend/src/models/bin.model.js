@@ -14,3 +14,5 @@ const binSchema = new mongoose.Schema({
     required: true,
   },
 });
+
+export const Bin = mongoose.model("Bin", binSchema);

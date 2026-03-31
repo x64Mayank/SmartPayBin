@@ -64,7 +64,7 @@ const generateAndUpdateRewardPoints = asyncHandler(
     await bin.save();
 
     await User.findByIdAndUpdate(userId, {
-      $inc: { rewardPoints: rewardPoints },
+      $inc: { totalRewards: rewardPoints, totalWasteDepositedInKg: weightKg },
     });
 
     res

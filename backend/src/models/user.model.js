@@ -5,21 +5,21 @@ import bcrypt from "bcrypt";
 const userSchema = new mongoose.Schema({
   fullName: {
     type: String,
-    require: true,
+    required: true,
   },
   username: {
     type: String,
-    require: true,
+    required: true,
     unique: true,
   },
   email: {
     type: String,
-    require: true,
+    required: true,
     unique: true,
   }, 
   password: {
     type: String,
-    require: true,
+    required: true,
   },
   totalRewards: {
     type: Number,
