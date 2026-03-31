@@ -1,7 +1,7 @@
 import axios from 'axios';
 
 const api = axios.create({
-  baseURL: 'http://localhost:8000', // Update based on backend port
+  baseURL: import.meta.env.VITE_BACKEND_URL,
   withCredentials: true, // Crucial for sending httpOnly cookies
 });
 
@@ -20,9 +20,25 @@ export const logoutCall = async () => {
   return response.data;
 };
 
-// Optionally if the backend adds a get-user endpoint:
-// export const getUserProfileCall = async () => {
-//   ...
-// }
+export const getCurrentUserCall = async () => {
+  const response = await api.get('/users/me');
+  return response.data;
+};
+
+// Deposit Flow API Calls
+export const startDepositSessionCall = async (binId) => {
+  const response = await api.post('/api/deposits/start-session', { binId });
+  return response.data;
+};
+
+export const getSessionStatusCall = async (sessionId) => {
+  const response = await api.get(`/api/deposits/session-status/${sessionId}`);
+  return response.data;
+};
+
+export const cancelSessionCall = async (sessionId) => {
+  const response = await api.post(`/api/deposits/cancel-session/${sessionId}`);
+  return response.data;
+};
 
 export default api;

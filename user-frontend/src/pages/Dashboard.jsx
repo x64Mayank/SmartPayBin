@@ -1,7 +1,7 @@
 import React from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
-import { SparklesIcon, TrashIcon, ArrowRightOnRectangleIcon, UserCircleIcon } from '@heroicons/react/24/outline';
+import { SparklesIcon, TrashIcon, ArrowRightOnRectangleIcon, UserCircleIcon, QrCodeIcon } from '@heroicons/react/24/outline';
 import { logoutCall } from '../services/api';
 import { logout } from '../features/authSlice';
 
@@ -57,6 +57,29 @@ const Dashboard = () => {
           {user.totalRewards?.toLocaleString() || 0} <span className="text-xl font-medium text-white/80">pts</span>
         </h1>
         <p className="text-sm font-light text-white/80">Keep recycling to earn more!</p>
+      </div>
+
+      <h3 className="font-bold text-lg mb-4 text-base-content/90">Quick Action</h3>
+      
+      {/* Start Deposit Button */}
+      <div 
+        onClick={() => navigate('/deposit')}
+        className="bg-primary hover:bg-primary/90 cursor-pointer p-4 rounded-3xl text-white shadow-xl shadow-primary/30 mb-8 flex items-center justify-between transition-transform active:scale-95"
+      >
+        <div className="flex items-center gap-4">
+          <div className="w-12 h-12 bg-white/20 rounded-full flex items-center justify-center">
+            <QrCodeIcon className="w-6 h-6 text-white" />
+          </div>
+          <div>
+            <h3 className="font-bold text-lg leading-tight">Start Deposit</h3>
+            <p className="text-white/80 text-sm">Scan a bin to earn points</p>
+          </div>
+        </div>
+        <div className="w-8 h-8 rounded-full bg-white/20 flex items-center justify-center">
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-4 h-4">
+            <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" />
+          </svg>
+        </div>
       </div>
 
       <h3 className="font-bold text-lg mb-4 text-base-content/90">Your Contributions</h3>
