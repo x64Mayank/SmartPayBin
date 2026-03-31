@@ -2,6 +2,11 @@ import mongoose from "mongoose";
 
 const depositSchema = new mongoose.Schema(
   {
+    sessionId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "DepositSession",
+      required: true,
+    },
     wasteType: {
       type: String,
       enum: ["plastic", "recyclable", "biodegradable", "mixed"],
