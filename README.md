@@ -1,145 +1,236 @@
-# 🗑 SmartPay Bin
+# 🗑 SmartPayBin
 
-SmartPay Bin is an IoT-based smart waste management system built using the **MERN stack + Python**.  
-It simulates a Raspberry Pi smart dustbin that sends deposit data to a backend server, calculates rewards, tracks bin capacity, and stores everything in MongoDB.
+SmartPayBin is an IoT-based smart waste management system built using the **MERN stack + Python**.
+It enables users to deposit waste into physical smart bins, earn reward points verified by real hardware sensors, and track their environmental contributions — all orchestrated through a secure, session-based architecture.
 
 ---
 
 ## 📌 Project Overview
 
-SmartPay Bin allows users to:
+SmartPayBin allows users to:
 
-- Deposit waste into a smart bin
-- Earn reward points based on waste weight/type
-- Track bin fill percentage
-- Store deposit history in a database
-
-Currently, the Raspberry Pi is simulated using a Python script (`mock_pi.py`).
+- **Authenticate** and manage their accounts via a mobile-optimized web app
+- **Scan a bin** (or enter its ID) to start a secure deposit session
+- **Deposit waste** into a real (or simulated) smart bin with weight and type classification
+- **Earn reward points** automatically calculated and credited by the server
+- **Track activity** including total waste deposited, reward balance, and bin fill levels
 
 ---
 
 ## 🏗 System Architecture
 
 ```
-Pi Simulator (Python)
-        ↓ HTTP POST
-Express Backend (Node.js)
-        ↓
-Business Logic (Controller)
-        ↓
-MongoDB (Database)
+User App (React)          Bin Kiosk (React)          Pi Simulator (Node.js / Python)
+     │                         │                              │
+     │ Start Session           │ Poll for Sessions            │
+     ├────────────────► Backend API (Express) ◄──────────────┤
+     │                         │                              │
+     │                    MongoDB Atlas                       │
+     │                         │                              │
+     │ Poll Session Status     │ Ack + Complete Session       │
+     ◄─────────────────────────┤──────────────────────────────┘
 ```
+
+### Security Model
+- **Users** can only declare *intent* ("I want to deposit at Bin X")
+- **Bins** provide *ground truth* (verified weight and waste type from hardware sensors)
+- The server only awards points when a trusted, API-key-authenticated bin reports data
 
 ---
 
 ## 📂 Project Structure
 
-### 🔹 Backend (Node.js + Express + MongoDB)
-
 ```
-backend/
+SmartPayBin/
 │
-├── controllers/
-│   └── depositController.js
+├── backend/                    # Express.js REST API
+│   ├── src/
+│   │   ├── controllers/        # Business logic (user, deposit, bin)
+│   │   ├── models/             # Mongoose schemas
+│   │   ├── routes/             # API route definitions
+│   │   ├── middlewares/        # JWT auth, bin API key auth
+│   │   ├── utils/              # ApiError, ApiResponse, AsyncHandler
+│   │   ├── server.js           # Express app configuration
+│   │   └── index.js            # Entry point + DB connection
+│   ├── .env                    # Environment variables
+│   └── package.json
 │
-├── models/
-│   └── Deposit.js
+├── user-frontend/              # Mobile-optimized React app (User facing)
+│   ├── src/
+│   │   ├── pages/              # Login, Register, Dashboard, Deposit, ActiveSession
+│   │   ├── features/           # Redux slices (authSlice)
+│   │   ├── services/           # Axios API layer
+│   │   ├── layouts/            # MobileLayout wrapper
+│   │   ├── store/              # Redux store configuration
+│   │   └── App.jsx             # Routes + auth hydration
+│   ├── .env                    # VITE_BACKEND_URL
+│   └── package.json
 │
-├── routes/
-│   └── depositRoutes.js
+├── bin-frontend/               # Kiosk touchscreen UI (Bin facing)
+│   ├── src/
+│   │   ├── components/         # BinKiosk state machine
+│   │   ├── services/           # Axios with API key auth headers
+│   │   └── App.jsx
+│   ├── .env                    # VITE_BACKEND_URL, VITE_BIN_ID, VITE_BIN_API_KEY
+│   └── package.json
 │
-├── node_modules/
-├── package.json
-├── package-lock.json
-└── server.js
-```
-
-### 🔹 Pi Simulator (Mock Raspberry Pi)
-
-```
-pi-simulator/
+├── pi-simulator/               # Legacy Python simulator
+│   ├── mock_pi.py
+│   └── requirements.txt
 │
-├── venv/
-├── mock_pi.py
-└── requirements.txt
+├── steps.md                    # End-to-end testing guide
+└── README.md
 ```
 
 ---
 
 ## ⚙️ Tech Stack
 
-### Backend
-- Node.js
-- Express.js
-- MongoDB
-- Mongoose
-- CORS
-
-### Simulator
-- Python
-- requests library
-- Virtual Environment (venv)
+| Layer | Technology |
+|-------|-----------|
+| Backend | Node.js, Express.js, MongoDB, Mongoose, JWT, bcrypt |
+| User Frontend | React 19, Vite 8, Tailwind CSS v4, DaisyUI v5, Redux Toolkit, Axios |
+| Bin Frontend | React 19, Vite 8, Tailwind CSS v4, DaisyUI v5, Axios |
+| Hardware Sim | Node.js (`bin-simulator.js`) / Python (`mock_pi.py`) |
 
 ---
 
-## 🚀 How to Run the Project
+## 🚀 How to Set Up the Project
 
-### 1️⃣ Start MongoDB
+### Prerequisites
 
-Make sure MongoDB is running locally:
-
-```
-mongodb://127.0.0.1:27017/smartpaybin
-```
+- **Node.js** v18+ and **npm**
+- **MongoDB Atlas** account (or local MongoDB)
+- **Git**
 
 ---
 
-### 2️⃣ Run Backend
-
-Inside `backend/`:
+### 1️⃣ Clone the Repository
 
 ```bash
+git clone https://github.com/your-username/SmartPayBin.git
+cd SmartPayBin
+```
+
+---
+
+### 2️⃣ Set Up the Backend
+
+```bash
+cd backend
 npm install
-npx nodemon server.js
 ```
 
-Server should start on:
+Create a `.env` file inside `backend/`:
 
+```env
+MONGODB_URI=mongodb+srv://<username>:<password>@<cluster>.mongodb.net
+PORT=8000
+CORS_ORIGIN=http://localhost:5173,http://localhost:5174
+ACCESS_TOKEN_SECRET=your_access_secret
+REFRESH_TOKEN_SECRET=your_refresh_secret
+ACCESS_TOKEN_EXPIRY=1d
+REFRESH_TOKEN_EXPIRY=7d
+ADMIN_SECRET=your_admin_secret
 ```
-http://localhost:5000
-```
 
----
-
-### 3️⃣ Run Pi Simulator
-
-Inside `pi-simulator/`:
+Start the backend:
 
 ```bash
-python -m venv venv
-source venv/bin/activate
-pip install -r requirements.txt
-python mock_pi.py
+npm run dev
 ```
 
-You should see deposit responses in terminal.
+The server will start on `http://localhost:8000`.
 
 ---
 
-## 🔄 Data Flow (Working)
+### 3️⃣ Set Up the User Frontend
 
-1. `mock_pi.py` generates deposit data
-2. Sends POST request to:
-   ```
-   http://localhost:5000/api/deposits
-   ```
-3. Backend:
-   - Receives data
-   - Calculates reward points
-   - Calculates fill percentage
-   - Saves deposit in MongoDB
-   - Sends response
-4. Python prints response
+```bash
+cd user-frontend
+npm install
+```
+
+Create a `.env` file inside `user-frontend/`:
+
+```env
+VITE_BACKEND_URL=http://localhost:8000
+```
+
+Start the dev server:
+
+```bash
+npm run dev
+```
+
+The app will be available at `http://localhost:5173`.
+
+---
+
+### 4️⃣ Set Up the Bin Frontend
+
+```bash
+cd bin-frontend
+npm install
+```
+
+Before creating the `.env`, you need to **register a bin** first (see Step 5). Then create a `.env` file inside `bin-frontend/`:
+
+```env
+VITE_BACKEND_URL=http://localhost:8000
+VITE_BIN_ID=<bin_id_from_registration>
+VITE_BIN_API_KEY=<api_key_from_registration>
+```
+
+Start the dev server:
+
+```bash
+npm run dev
+```
+
+The kiosk UI will be available at `http://localhost:5174`.
+
+---
+
+### 5️⃣ Register a Physical Bin
+
+With the backend running, create a bin entity in the database:
+
+```bash
+curl -X POST http://localhost:8000/api/bin/register \
+  -H "Content-Type: application/json" \
+  -H "x-admin-secret: your_admin_secret" \
+  -d '{"name":"Main Lobby Bin","location":"Campus Center","capacity":100}'
+```
+
+The response will contain:
+- `bin._id` — Use this as `VITE_BIN_ID`
+- `apiKey` — Use this as `VITE_BIN_API_KEY`
+
+Paste these values into `bin-frontend/.env` and restart the bin frontend.
+
+---
+
+## 🧪 End-to-End Testing
+
+With all three services running simultaneously:
+
+| Service | URL | Purpose |
+|---------|-----|---------|
+| Backend | `http://localhost:8000` | REST API |
+| User App | `http://localhost:5173` | Mobile user interface |
+| Bin Kiosk | `http://localhost:5174` | Hardware touchscreen UI |
+
+### Testing Flow
+
+1. **Register & Login** on the User App (`localhost:5173`)
+2. Click **"Start Deposit"** on the Dashboard
+3. Paste the **Bin ID** and click "Simulate Scan"
+4. Watch the **Bin Kiosk** (`localhost:5174`) automatically detect the session and unlock
+5. On the Kiosk, select a **waste type** and **weight**, then click "End Deposit"
+6. Watch the **User App** automatically show the reward summary with points earned
+
+For detailed step-by-step instructions, see [`steps.md`](./steps.md).
 
 ---
 
@@ -149,72 +240,34 @@ You should see deposit responses in terminal.
 |--------|--------|
 | Express Server | ✅ Working |
 | MongoDB Connection | ✅ Working |
-| Deposit API | ✅ Working |
+| User Authentication (JWT) | ✅ Working |
+| Session-Based Deposit Flow | ✅ Working |
+| Bin Registration & API Keys | ✅ Working |
+| User Frontend (React) | ✅ Working |
+| Bin Kiosk Frontend (React) | ✅ Working |
 | Reward Calculation | ✅ Implemented |
 | Fill Percentage Tracking | ✅ Implemented |
-| Pi Simulation | ✅ Working |
-| React Frontend | ⏳ Not Started |
+| Hardware Simulator | ✅ Working (Node.js + Python) |
 | Real Raspberry Pi | ⏳ Not Integrated |
-| Authentication | ⏳ Not Implemented |
-
----
-
-## 🧠 Example Deposit Schema
-
-```json
-{
-  "binId": "BIN001",
-  "userId": "USER123",
-  "wasteType": "plastic",
-  "weightKg": 0.42,
-  "fillLevelCm": 23,
-  "capacityCm": 100,
-  "rewardPoints": 8.4,
-  "fillPercentage": 23,
-  "timestamp": "2026-02-27T10:20:30Z"
-}
-```
-
----
-
-## 🎯 Features Implemented
-
-- MVC Architecture
-- Modular route structure
-- Controller-based business logic
-- Sensor simulation via Python
-- HTTP communication layer
-- MongoDB persistence
-- Reward point logic
-- Fill capacity tracking
+| Cloud Deployment | ⏳ Not Started |
 
 ---
 
 ## 🔮 Future Improvements
 
-- React Dashboard (Admin + User)
-- Authentication (JWT)
-- User reward ledger
-- Real Raspberry Pi integration
-- MQTT support for scalability
-- Real-time updates (Socket.io)
-- Cloud deployment (AWS / DigitalOcean)
-
----
-
-## 🏆 Current Achievement
-
-SmartPay Bin has a fully functional IoT data pipeline:
-
-> Simulated hardware → Backend API → Database → Response system
-
-This forms the foundation for scaling into a production-level smart waste management platform.
+- Real Raspberry Pi hardware integration with weight sensors
+- QR code scanning via phone camera (requires HTTPS)
+- Admin dashboard for bin management and analytics
+- Real-time updates via WebSockets / Socket.io
+- MQTT support for scalable IoT communication
+- Cloud deployment (AWS / DigitalOcean / Vercel)
+- Push notifications for deposit confirmations
 
 ---
 
 ## 👨‍💻 Author
 
-SmartPay Bin – IoT + MERN Startup Prototype  
+SmartPayBin – IoT + MERN Startup Prototype
 Built as part of a B.Tech project and startup initiative.
 
 ---
