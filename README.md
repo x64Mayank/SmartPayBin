@@ -132,7 +132,22 @@ REFRESH_TOKEN_SECRET=your_refresh_secret
 ACCESS_TOKEN_EXPIRY=1d
 REFRESH_TOKEN_EXPIRY=7d
 ADMIN_SECRET=your_admin_secret
+COOKIE_DOMAIN=.yourdomain.com
+TRUST_PROXY=true
 ```
+
+Backend notes:
+
+- `CORS_ORIGIN` is an explicit allowlist. Add only the frontend origins you trust.
+- `TRUST_PROXY=true` is only needed when the backend sits behind a reverse proxy or load balancer.
+- `COOKIE_DOMAIN` is optional and only needed if you want cookies shared across subdomains.
+
+Production cookie notes:
+
+- `httpOnly` cookies are used for `accessToken` and `refreshToken`, so JavaScript cannot read them directly.
+- In production, the backend sets `Secure` and `SameSite=None` so cookies can be sent over HTTPS across separate origins.
+- If the app is deployed behind a reverse proxy or load balancer, set `TRUST_PROXY=true` on the platform and enable Express trust proxy in your deployment setup.
+- If your frontend and backend share the same site, you can keep `SameSite=Lax`, but the current code defaults to `None` in production for compatibility with cross-origin hosting.
 
 Start the backend:
 
@@ -154,8 +169,11 @@ npm install
 Create a `.env` file inside `user-frontend/`:
 
 ```env
-VITE_BACKEND_URL=http://localhost:8000
+# Optional in local dev when using the Vite proxy. Set a fixed backend URL only if you are bypassing the proxy or building for a separate production API.
+VITE_BACKEND_URL=
 ```
+
+The user frontend uses Vite dev proxy routes for `/users` and `/api`, so the browser can stay on the frontend origin during local development.
 
 Start the dev server:
 
@@ -177,10 +195,13 @@ npm install
 Before creating the `.env`, you need to **register a bin** first (see Step 5). Then create a `.env` file inside `bin-frontend/`:
 
 ```env
-VITE_BACKEND_URL=http://localhost:8000
+# Optional in local dev when using the Vite proxy. Set a fixed backend URL only if you are bypassing the proxy or building for a separate production API.
+VITE_BACKEND_URL=
 VITE_BIN_ID=<bin_id_from_registration>
 VITE_BIN_API_KEY=<api_key_from_registration>
 ```
+
+The bin frontend uses a Vite dev proxy route for `/api`, so the browser can stay on the frontend origin during local development.
 
 Start the dev server:
 

@@ -9,7 +9,7 @@ connectDB()
       console.log("There is an error in start of the server ", err);
     });
 
-    app.listen(process.env.PORT, () => {
+    app.listen(process.env.PORT, "0.0.0.0", () => {
       console.log(` server has started at PORT : ${process.env.PORT}`);
       startSessionCleanup();
     });

@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-const BACKEND_URL = import.meta.env.VITE_BACKEND_URL;
+const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || '';
 const BIN_ID = import.meta.env.VITE_BIN_ID;
 const BIN_API_KEY = import.meta.env.VITE_BIN_API_KEY;
 

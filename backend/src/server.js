@@ -4,9 +4,18 @@ import cookieParser from "cookie-parser";
 
 const app = express();
 
+const configuredOrigins = (process.env.CORS_ORIGIN || "")
+  .split(",")
+  .map((origin) => origin.trim())
+  .filter(Boolean);
+
+if (process.env.TRUST_PROXY === "true") {
+  app.set("trust proxy", 1);
+}
+
 app.use(
   cors({
-    origin: process.env.CORS_ORIGIN.split(',').map(o => o.trim()),
+    origin: configuredOrigins,
     credentials: true,
   }),
 );
