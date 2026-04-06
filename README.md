@@ -20,15 +20,51 @@ SmartPayBin allows users to:
 ## 🏗 System Architecture
 
 ```
-User App (React)          Bin Kiosk (React)          Pi Simulator (Node.js / Python)
-     │                         │                              │
-     │ Start Session           │ Poll for Sessions            │
-     ├────────────────► Backend API (Express) ◄──────────────┤
-     │                         │                              │
-     │                    MongoDB Atlas                       │
-     │                         │                              │
-     │ Poll Session Status     │ Ack + Complete Session       │
-     ◄─────────────────────────┤──────────────────────────────┘
+User App (React)          Bin Kiosk (React, Python)            Backend (node.js server)
+|                                  |                                     |
+| 1. Scan QR code (binId)          |                                     |
+|--------------------------------->|                                     |
+|                                  |                                     |
+| 2. POST /start-session           |                                     |
+|--------------------------------->|                                     |
+| (JWT Auth)                       | Creates Pending Session             |
+|                                  |                                     |
+| 3. Returns Session ID            |                                     |
+|<---------------------------------|                                     |
+|                                  |                                     |
+|                                  | 4. GET /pending-sessions            |
+|                                  |<------------------------------------|
+|                                  |                      (API Key Auth) |
+|                                  |                                     |
+|                                  | 5. Returns Pending Session          |
+|                                  |------------------------------------>|
+|                                  |                                     |
+|                                  | 6. POST /ack-session (Session ID)   |
+|                                  |<------------------------------------|
+|                                  |                      (API Key Auth) |
+|                                  |                                     |
+|                                  | Bin is locked to session ---------->|
+|                                  |                                     |
+|                 (User drops waste. Sensors read weight & type)         |
+|                                  |                                     |
+| 7. Press "End Deposit" button    |                                     |
+|----------------------------------------------------------------------->|
+|                                  |                                     |
+|                                  | 8. POST /complete-session           |
+|                                  |<------------------------------------|
+|                                  | (wasteType, weightKg)               |
+|                                  | (API Key Auth)                      |
+|                                  |                                     |
+|                                  | Calculates points                   |
+|                                  | Credits User                        |
+|                                  |                                     |
+| 9. GET /session-status           |                                     |
+|--------------------------------->|                                     |
+| (Polling)                        |                                     |
+|                                  |                                     |
+| 10. Status: completed, points    |                                     |
+|<---------------------------------|                                     |
+|                                  |                                     |
 ```
 
 ### Security Model
