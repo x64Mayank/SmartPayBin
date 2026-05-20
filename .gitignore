@@ -16,7 +16,9 @@ pip-delete-this-directory.txt
 # Environment variables
 .env
 .env.local
+.env.pi
 .env.*.local
+pi-agent/venv/
 
 # Logs
 logs/
