@@ -291,13 +291,13 @@ class FunnelRotator:
       - Step angle: 5.625°/64 (half-step)
       - Gear ratio: 1:64
       - Full revolution: 4096 half-steps (or 2048 full-steps)
-      - 90° = 512 full-steps
+      - 90° = 1024 half-steps (using 8-step sequence)
 
     Bin positions (assuming 4 bins at 90° intervals):
       recyclable    = 0°    (home)
-      plastic       = 90°   (512 steps CW)
-      biodegradable = 180°  (1024 steps CW)
-      mixed         = 270°  (1536 steps CW)
+      plastic       = 90°   (1024 steps CW)
+      biodegradable = 180°  (2048 steps CW)
+      mixed         = 270°  (3072 steps CW)
     """
 
     # Full-step sequence for 28BYJ-48
@@ -313,7 +313,8 @@ class FunnelRotator:
     ]
 
     # Steps for each 90° increment (half-step mode with 8-step sequence)
-    STEPS_PER_90DEG = 512
+    # 4096 half-steps per revolution → 1024 per 90°
+    STEPS_PER_90DEG = 1024
 
     # Waste type → position mapping
     BIN_POSITIONS = {
