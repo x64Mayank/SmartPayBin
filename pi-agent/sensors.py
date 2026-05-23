@@ -2,8 +2,8 @@
 SmartPayBin — Sensor & Actuator Drivers for Raspberry Pi 4
 
 Drivers for:
-  - WeightSensor    (HX711 + 20kg load cell)
-  - UltrasonicSensor (HC-SR04)
+  - WeightSensor    (SIMULATED — random 1-10g per deposit)
+  - UltrasonicSensor (SIMULATED — random fill level, resets at 100%)
   - WasteClassifier  (MH-RD moisture + LJ18A3 metal + FC-51 IR presence)
   - TrapDoor         (SG90 servo)
   - FunnelRotator    (28BYJ-48 stepper + ULN2003)
@@ -12,6 +12,7 @@ Drivers for:
 
 import os
 import time
+import random
 
 # Auto-detect: use mock GPIO if not on Pi or MOCK_GPIO=1
 if os.getenv("MOCK_GPIO") == "1":
@@ -24,150 +25,70 @@ else:
 
 
 # ═══════════════════════════════════════════════════════════
-# Weight Sensor — HX711 + 20kg Load Cell
+# Weight Sensor — SIMULATED (load cell not connected)
+# Generates random weight between 1-10 grams per deposit.
 # ═══════════════════════════════════════════════════════════
 
 class WeightSensor:
-    """HX711 load cell reader. Measures total weight of all bins on base platform."""
+    """Simulated weight sensor. Returns random 1-10g deposit weight."""
 
-    def __init__(self, dt_pin, sck_pin, calibration_factor=420.0):
-        self.dt_pin = dt_pin
-        self.sck_pin = sck_pin
-        self.calibration_factor = calibration_factor
-        self.offset = 0
-
-        GPIO.setup(self.dt_pin, GPIO.IN)
-        GPIO.setup(self.sck_pin, GPIO.OUT)
-        GPIO.output(self.sck_pin, GPIO.LOW)
-        time.sleep(0.5)
-        self._tare()
-
-    def _read_raw(self):
-        """Read raw 24-bit value from HX711."""
-        # Wait for HX711 to be ready (DT goes LOW)
-        timeout = time.time() + 2
-        while GPIO.input(self.dt_pin) == 1:
-            if time.time() > timeout:
-                raise TimeoutError("HX711 not responding")
-
-        data = 0
-        for _ in range(24):
-            GPIO.output(self.sck_pin, GPIO.HIGH)
-            time.sleep(0.000001)
-            data = (data << 1) | GPIO.input(self.dt_pin)
-            GPIO.output(self.sck_pin, GPIO.LOW)
-            time.sleep(0.000001)
-
-        # 25th pulse — set gain to 128 (Channel A)
-        GPIO.output(self.sck_pin, GPIO.HIGH)
-        time.sleep(0.000001)
-        GPIO.output(self.sck_pin, GPIO.LOW)
-        time.sleep(0.000001)
-
-        # Convert from two's complement
-        if data & 0x800000:
-            data -= 0x1000000
-        return data
-
-    def _tare(self, samples=10):
-        """Zero the scale. Call with empty bins on platform."""
-        print("   ⚖️  Taring scale (measuring empty weight)...")
-        readings = []
-        for _ in range(samples):
-            try:
-                readings.append(self._read_raw())
-                time.sleep(0.1)
-            except TimeoutError:
-                continue
-        if readings:
-            self.offset = sum(readings) / len(readings)
-        print(f"   ⚖️  Tare complete. Offset: {self.offset:.0f}")
+    def __init__(self, dt_pin=None, sck_pin=None, calibration_factor=420.0):
+        # No GPIO setup needed — simulated
+        self._base_weight = 0.0  # running total (kg)
+        print("   ⚖️  [SIM] Weight sensor in simulation mode (1-10g random)")
 
     def read_kg(self, samples=5):
-        """Read weight in kg, averaged over samples."""
-        readings = []
-        for _ in range(samples):
-            try:
-                readings.append(self._read_raw())
-                time.sleep(0.05)
-            except TimeoutError:
-                continue
-        if not readings:
-            return 0
-        avg = sum(readings) / len(readings)
-        weight_grams = (avg - self.offset) / self.calibration_factor
-        weight_kg = weight_grams / 1000
-        return max(round(weight_kg, 3), 0)
+        """Return current simulated base weight."""
+        return round(self._base_weight, 3)
 
     def read_stable(self, stability_count=3, tolerance_kg=0.02, interval=0.5):
-        """
-        Wait for stable weight reading.
-        Returns weight when `stability_count` consecutive reads
-        are within `tolerance_kg` of each other.
-        """
-        prev = self.read_kg()
-        count = 0
-        while count < stability_count:
-            time.sleep(interval)
-            curr = self.read_kg()
-            if abs(curr - prev) <= tolerance_kg:
-                count += 1
-            else:
-                count = 0
-            prev = curr
-        return prev
+        """Return current simulated weight (no stabilization needed)."""
+        time.sleep(0.5)  # small delay to feel realistic
+        return self.read_kg()
+
+    def simulate_deposit(self):
+        """Generate random deposit weight (1-10 grams) and add to base."""
+        deposit_grams = random.randint(1, 10)
+        deposit_kg = deposit_grams / 1000.0
+        self._base_weight += deposit_kg
+        return deposit_kg
 
 
 # ═══════════════════════════════════════════════════════════
-# Ultrasonic Sensor — HC-SR04 (fill level)
+# Ultrasonic Sensor — SIMULATED (HC-SR04 removed)
+# Generates random fill level increment. Resets to 0 at 100%.
 # ═══════════════════════════════════════════════════════════
 
 class UltrasonicSensor:
-    """HC-SR04 distance sensor. Measures fill level of bin below funnel."""
+    """Simulated fill level sensor. Increments randomly, resets at 100%."""
 
-    def __init__(self, trig_pin, echo_pin, bin_depth_cm=50):
-        self.trig_pin = trig_pin
-        self.echo_pin = echo_pin
+    def __init__(self, trig_pin=None, echo_pin=None, bin_depth_cm=50):
+        # No GPIO setup needed — simulated
         self.bin_depth_cm = bin_depth_cm
-
-        GPIO.setup(self.trig_pin, GPIO.OUT)
-        GPIO.setup(self.echo_pin, GPIO.IN)
-        GPIO.output(self.trig_pin, GPIO.LOW)
-        time.sleep(0.1)
+        self._fill_level = 0.0  # current fill percentage
+        print("   📏 [SIM] Ultrasonic sensor in simulation mode (random fill)")
 
     def read_distance_cm(self):
-        """Measure distance in cm. Returns -1 on timeout."""
-        GPIO.output(self.trig_pin, GPIO.HIGH)
-        time.sleep(0.00001)
-        GPIO.output(self.trig_pin, GPIO.LOW)
-
-        timeout = time.time() + 0.04
-        start = time.time()
-
-        while GPIO.input(self.echo_pin) == 0:
-            start = time.time()
-            if start > timeout:
-                return -1
-
-        while GPIO.input(self.echo_pin) == 1:
-            end = time.time()
-            if end > timeout:
-                return -1
-
-        duration = end - start
-        distance = (duration * 34300) / 2
+        """Simulate distance based on current fill level."""
+        distance = self.bin_depth_cm * (1 - self._fill_level / 100)
         return round(distance, 2)
 
     def fill_percentage(self):
         """
-        Calculate bin fill %.
-        0% = empty (distance == bin_depth), 100% = full (distance == 0).
+        Return current fill % and increment for next call.
+        Resets to 0% if fill reaches or exceeds 100%.
         """
-        dist = self.read_distance_cm()
-        if dist < 0:
-            return 0
-        fill = ((self.bin_depth_cm - dist) / self.bin_depth_cm) * 100
-        return max(0, min(100, round(fill, 1)))
+        current = round(self._fill_level, 1)
+
+        # Increment fill for next deposit (random 2-8%)
+        self._fill_level += random.uniform(2, 8)
+
+        # Reset if bin is full
+        if self._fill_level >= 100:
+            self._fill_level = 0.0
+            print("   📏 [SIM] Bin full! Fill level reset to 0%")
+
+        return max(0, min(100, current))
 
 
 # ═══════════════════════════════════════════════════════════

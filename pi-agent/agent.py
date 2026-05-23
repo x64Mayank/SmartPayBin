@@ -182,49 +182,37 @@ def handle_session(session):
     print(f"   Metal:    {'YES' if is_metal else 'NO'}")
     print(f"   → Type:   {waste_type}")
 
-    # ── Step 4: Snapshot weight BEFORE ──
-    print("\n⚖️  Step 4: Reading weight before deposit...")
-    weight_before = scale.read_stable()
-    print(f"   Weight before: {weight_before} kg")
-
-    # ── Step 5: Rotate funnel to correct bin ──
-    print(f"\n🔄 Step 5: Rotating funnel to [{waste_type}] bin...")
+    # ── Step 4: Rotate funnel to correct bin ──
+    print(f"\n🔄 Step 4: Rotating funnel to [{waste_type}] bin...")
     rotator.rotate_to(waste_type)
     time.sleep(0.5)
 
-    # ── Step 6: Open trap door → waste drops ──
-    print("\n🚪 Step 6: Opening trap door...")
+    # ── Step 5: Open trap door → waste drops ──
+    print("\n🚪 Step 5: Opening trap door...")
     trap_door.open()
     time.sleep(2)  # let waste fall
 
-    # ── Step 7: Close trap door ──
-    print("\n🚪 Step 7: Closing trap door...")
+    # ── Step 6: Close trap door ──
+    print("\n🚪 Step 6: Closing trap door...")
     trap_door.close()
     time.sleep(0.5)
 
-    # ── Step 8: Snapshot weight AFTER ──
-    print("\n⚖️  Step 8: Reading weight after deposit...")
-    weight_after = scale.read_stable()
-    deposited_kg = round(weight_after - weight_before, 3)
-    print(f"   Weight after:  {weight_after} kg")
-    print(f"   ──────────────────────")
-    print(f"   Deposited:     {deposited_kg} kg")
+    # ── Step 7: Simulate weight ──
+    print("\n⚖️  Step 7: Measuring deposit weight...")
+    deposited_kg = scale.simulate_deposit()
+    print(f"   [SIM] Deposited: {deposited_kg * 1000:.0f}g ({deposited_kg:.3f} kg)")
 
-    if deposited_kg <= 0.01:
-        print("⚠️  No measurable weight change. Submitting minimum.")
-        deposited_kg = 0.01
-
-    # ── Step 9: Measure fill level ──
-    print("\n📏 Step 9: Measuring bin fill level...")
+    # ── Step 8: Measure fill level ──
+    print("\n📏 Step 8: Measuring bin fill level...")
     fill = ultrasonic.fill_percentage()
-    print(f"   Fill level: {fill}%")
+    print(f"   [SIM] Fill level: {fill}%")
 
-    # ── Step 10: Return funnel to home ──
-    print("\n🔄 Step 10: Returning funnel to home position...")
+    # ── Step 9: Return funnel to home ──
+    print("\n🔄 Step 9: Returning funnel to home position...")
     rotator.go_home()
 
-    # ── Step 11: Submit to backend ──
-    print(f"\n📤 Step 11: Submitting deposit data...")
+    # ── Step 10: Submit to backend ──
+    print(f"\n📤 Step 10: Submitting deposit data...")
     print(f"   wasteType: {waste_type}")
     print(f"   weightKg:  {deposited_kg}")
 
