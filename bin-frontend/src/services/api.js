@@ -13,25 +13,9 @@ const binApi = axios.create({
   },
 });
 
-// Poll for any pending sessions assigned to this bin
-export const getPendingSessionsCall = async () => {
-  const response = await binApi.get('/api/bin/pending-sessions');
-  return response.data;
-};
-
-// Acknowledge and lock the session (bin handshake)
-export const acknowledgeSessionCall = async (sessionId) => {
-  const response = await binApi.post('/api/bin/ack-session', { sessionId });
-  return response.data;
-};
-
-// Submit final sensor data + complete the session
-export const completeSessionCall = async (sessionId, wasteType, weightKg) => {
-  const response = await binApi.post('/api/bin/complete-session', {
-    sessionId,
-    wasteType,
-    weightKg,
-  });
+// Poll for current session status (pending → active → completed)
+export const getActiveSessionCall = async () => {
+  const response = await binApi.get('/api/bin/active-session');
   return response.data;
 };
 

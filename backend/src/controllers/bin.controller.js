@@ -174,6 +174,51 @@ const completeSession = asyncHandler(async (req, res) => {
   );
 });
 
+// Bin polls for its current active/recent session status
+const getActiveSession = asyncHandler(async (req, res) => {
+  const binId = req.bin._id;
+
+  // Find the most recent non-expired session (pending, active, or just-completed)
+  const session = await DepositSession.findOne({
+    binId,
+    status: { $in: ["pending", "active", "completed"] },
+  })
+    .populate("userId", "fullName username")
+    .sort({ updatedAt: -1 });
+
+  if (!session) {
+    return res.status(200).json(
+      new ApiResponse(200, { session: null }, "No active session")
+    );
+  }
+
+  // Only return completed sessions from last 30 seconds (so UI can show result briefly)
+  if (session.status === "completed" && session.completedAt) {
+    const elapsed = Date.now() - new Date(session.completedAt).getTime();
+    if (elapsed > 30000) {
+      return res.status(200).json(
+        new ApiResponse(200, { session: null }, "No active session")
+      );
+    }
+  }
+
+  res.status(200).json(
+    new ApiResponse(200, {
+      session: {
+        _id: session._id,
+        status: session.status,
+        userId: session.userId,
+        wasteType: session.wasteType || null,
+        weightKg: session.weightKg || null,
+        rewardPoints: session.rewardPoints || 0,
+        fillPercentage: session.fillPercentage || null,
+        expiresAt: session.expiresAt,
+        completedAt: session.completedAt || null,
+      },
+    }, `Session status: ${session.status}`)
+  );
+});
+
 // ─── Admin endpoint ───
 
 // Register a new bin (admin only, protected by ADMIN_SECRET)
@@ -222,4 +267,4 @@ const registerBin = asyncHandler(async (req, res) => {
   );
 });
 
-export { getPendingSessions, acknowledgeSession, completeSession, registerBin };
+export { getPendingSessions, acknowledgeSession, completeSession, getActiveSession, registerBin };
